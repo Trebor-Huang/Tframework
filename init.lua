@@ -45,6 +45,7 @@ local handlers = {
     filedropped = defaultHandler, -- File is dragged and dropped onto the window.
 }
 Tframework.handlers = handlers
+Tframework.scene = Tframework.GUIObject.GUIObject
 
 function love.run()
     local love = love
@@ -88,13 +89,12 @@ function love.run()
         dt = timer.step()
 
         -- Call update and draw
-        if update then update(dt) end -- will pass 0 if love.timer is disabled
+        Tframework.scene:update(dt)
 
         if love.graphics and love.graphics.isActive() then
             love.graphics.origin()
             love.graphics.clear(love.graphics.getBackgroundColor())
-            if love.draw then love.draw() end
-            love.graphics.print(1/dt, 10, 10)
+            Tframework.scene:draw()
             love.graphics.present()
         end
 

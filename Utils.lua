@@ -1,7 +1,7 @@
--- Some handy utilities
+-- Some handy utilities.
 local Utils = {}
 
--- Does nothing, returns nil
+-- Does nothing, returns nil.
 function Utils.nop() end
 
 -- Placeholder for unimplemented functions, raises an error.
@@ -28,6 +28,19 @@ function Utils.remove(array, element)
             table.remove(array, i)
         end
     end
+end
+
+--#endregion
+
+--#region OOP
+
+---Instantiates an object of a class.
+---@param class table
+---@param object? table
+function Utils.instantiate(class, object)
+    object = object or {}
+    setmetatable(object, {__index=class})
+    return object
 end
 
 --#endregion

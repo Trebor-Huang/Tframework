@@ -1,6 +1,7 @@
 --[[
     Default testing code.
 ]]
+Tframework = require 'init'
 
 local pi, sin, cos, pow, tanh, log = math.pi, math.sin, math.cos, math.pow, math.tanh, math.log
 local getTime = love.timer.getTime
@@ -64,7 +65,9 @@ for k, p in pairs(KeyPitch) do
     KeySources[k] = love.audio.newSource(data)
 end
 
-function love.update(dt)
+MainScene = Tframework.GUIObject.GUIObject:new()
+
+function MainScene.controller:update(dt)
     for k, s in pairs(KeySources) do
         if keys[k] then
             if releasedkeys[k] then
@@ -76,7 +79,7 @@ function love.update(dt)
     end
 end
 
-function love.draw()
+function MainScene.view:draw()
     for k, pos in pairs(KeyPosition) do
         if keys[k] and not releasedkeys[k] then
             gc.setColor(0.3, 0.8, 0.8)
@@ -85,9 +88,10 @@ function love.draw()
         end
         gc.print(k, pos[1], pos[2])
     end
+    return true
 end
 
-function love.keypressed(key, _)
+function Tframework.handlers.keypressed(_, key)
     if not KeySources[key] then return end
     keys[key] = getTime()
     KeySources[key]:play()
@@ -96,9 +100,9 @@ function love.keypressed(key, _)
     releasedkeys[key] = nil
 end
 
-function love.keyreleased(key, _, _)
+function Tframework.handlers.keyreleased(_, key)
     if not KeySources[key] then return end
     releasedkeys[key] = getTime()
 end
 
-require 'init'
+Tframework.scene = MainScene

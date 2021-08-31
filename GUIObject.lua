@@ -19,7 +19,7 @@ GUIObject.Controller = {
 GUIObject.View = {
     ---@type love.Canvas
     canvas = nil,
-    draw = Utils.nop,  -- Draws on its canvas.
+    draw = Utils.nop,  -- Draws on its canvas. Returns a boolean indicating whether any changes are done.
 }
 
 ---@class Model
@@ -35,25 +35,30 @@ GUIObject.GUIObject = {
     model = GUIObject.Model,
     -- Should not be altered. The children list is maintained by the framework.
     ---@type GUIObject[]
-    children = {},
+    children = nil,
     -- Should not be altered. The parent is maintained by the framework.
     ---@type GUIObject|nil
     parent = nil
 }
 
 -- To get quick navigation, the index function looks up the methods in the MVC components too.
-GUIObject.GUIObject.__index = function(o, k)
-    local method = o.model.k
+setmetatable(GUIObject.GUIObject, {__index=function(o, k)
+    local method = o.model[k]
     if method ~= nil then return method end
-    method = o.view.k
+    method = o.view[k]
     if method ~= nil then return method end
-    return o.model.k
-end
+    return o.controller[k]
+end})
 
+-- Creates an empty `GUIObject`.
+---@param parent? GUIObject
 ---@return GUIObject
-function GUIObject.GUIObject:new()
-    local o = {__index = self}
-    setmetatable(o, self)
+function GUIObject.GUIObject:new(parent)
+    local o = {children={}}
+    setmetatable(o, {__index=self})
+    if parent then
+        parent:addChild(self)
+    end
     return o
 end
 
