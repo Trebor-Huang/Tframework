@@ -115,4 +115,6 @@ function love.run()
     end
 end
 
+Tframework.GUIObject.Components = require 'Components'
+
 return Tframework

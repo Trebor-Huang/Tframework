@@ -9,17 +9,27 @@ local Utils = require 'Utils'
 ]]
 local GUIObject = {}
 
+local gc = love.graphics
+
 ---@class Controller
 GUIObject.Controller = {
-    process = Utils.nop,  -- Processes events.
+    -- Processes events.
+    -- Conventionally returns a boolean to indicate whether the event is to be consumed
+    -- or to be passed to the next controller. But this is not guaranteed to be respected
+    -- by the `GUIObject`.
+    process = Utils.nop,
     update = Utils.nop,  -- Updats the model, given `dt` as argument.
 }
 
 ---@class View
 GUIObject.View = {
+    -- The canvas associated with the `View`. Use `nil` for the screen itself.
+    -- Mipmaps are not yet supported.
     ---@type love.Canvas
     canvas = nil,
-    draw = Utils.nop,  -- Draws on its canvas. Returns a boolean indicating whether any changes are done.
+    -- Draws on its canvas. Returns a boolean indicating whether any changes are done.
+    ---@return boolean
+    draw = Utils.nop,
 }
 
 ---@class Model
@@ -38,28 +48,32 @@ GUIObject.GUIObject = {
     children = nil,
     -- Should not be altered. The parent is maintained by the framework.
     ---@type GUIObject|nil
-    parent = nil
+    parent = nil,
+    -- The wrapper drawing function. Sets and unsets the canvas.
+    draw = function(self)
+        if self.canvas then
+            gc.setCanvas(self.canvas)
+        end
+        local b = self.view.draw(self)
+        if self.canvas then
+            gc.setCanvas()
+        end
+        return b
+    end,
+    __class_index = function(o, k)
+        local method = o.model[k]
+        if method ~= nil then return method end
+        method = o.view[k]
+        if method ~= nil then return method end
+        method = o.controller[k]
+        if method ~= nil then return method end
+    end,
 }
 
--- To get quick navigation, the index function looks up the methods in the MVC components too.
-setmetatable(GUIObject.GUIObject, {__index=function(o, k)
-    local method = o.model[k]
-    if method ~= nil then return method end
-    method = o.view[k]
-    if method ~= nil then return method end
-    return o.controller[k]
-end})
-
--- Creates an empty `GUIObject`.
----@param parent? GUIObject
----@return GUIObject
-function GUIObject.GUIObject:new(parent)
-    local o = {children={}}
-    setmetatable(o, {__index=self})
-    if parent then
-        parent:addChild(self)
+function GUIObject.GUIObject:__instantiate(obj)
+    if obj.parent then
+        obj.parent:addChild(self)
     end
-    return o
 end
 
 -- Add a child object. Note that this will remove the child from its previous parents (if any).
